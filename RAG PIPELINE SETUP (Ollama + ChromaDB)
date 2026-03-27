@@ -1,0 +1,22 @@
+# ==========================================
+# 3. RAG PIPELINE SETUP (Ollama + ChromaDB)
+# ==========================================
+def initialize_rag_pipeline(documents):
+    """
+    Embeds documents and stores them in a local ChromaDB vector store.
+    """
+    print("Initializing RAG pipeline and embedding documents securely...")
+    
+    # Using Ollama for local, secure embeddings (keeps data on-premise)
+    embeddings = OllamaEmbeddings(model="nomic-embed-text") 
+    
+    # Create the vector store
+    vectorstore = Chroma.from_documents(
+        documents=documents, 
+        embedding=embeddings,
+        persist_directory="./grant_chroma_db"
+    )
+    
+    # Create a retriever
+    retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
+    return retriever

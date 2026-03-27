@@ -1,0 +1,30 @@
+# ==========================================
+# 2. GOOGLE SHEETS INTAKE (Real-time Surveys)
+# ==========================================
+def fetch_google_sheets_intake(sheet_csv_url):
+    """
+    Fetches real-time survey aggregations from a published Google Sheet.
+    """
+    print("Fetching recent survey intake data from Google Sheets...")
+    # Read the published Google Sheet CSV directly into a Pandas DataFrame
+    try:
+        # df = pd.read_csv(sheet_csv_url) # Uncomment for real usage
+        
+        # Mock data representing the Google Forms/Sheets intake pipeline
+        mock_sheet_data = pd.DataFrame({
+            "Timestamp": ["2025-08-01", "2025-08-02"],
+            "Applicant_Name": ["Green Earth NGO", "City Youth Center"],
+            "Needs_Requested": ["Funding for urban gardens", "After-school tutoring program funds"]
+        })
+        
+        documents = []
+        for _, row in mock_sheet_data.iterrows():
+            doc = Document(
+                page_content=f"Applicant: {row['Applicant_Name']}\nNeeds: {row['Needs_Requested']}",
+                metadata={"source": "Google Sheets Intake", "date": row['Timestamp']}
+            )
+            documents.append(doc)
+        return documents
+    except Exception as e:
+        print(f"Error fetching sheets data: {e}")
+        return []

@@ -1,0 +1,39 @@
+import os
+import pandas as pd
+import requests
+from langchain_community.llms import Ollama
+from langchain_community.embeddings import OllamaEmbeddings
+from langchain_community.vectorstores import Chroma
+from langchain.chains import create_retrieval_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.documents import Document
+
+# ==========================================
+# 1. ZOHO CRM INTEGRATION (Historical Docs)
+# ==========================================
+def fetch_zoho_grant_data(api_token):
+    """
+    Simulates fetching historical grant documents from Zoho CRM via API.
+    """
+    print("Fetching historical grant documents from Zoho CRM...")
+    # In a real scenario, this would be your Zoho API endpoint
+    # url = "https://www.zohoapis.com/crm/v2/Grants"
+    # headers = {"Authorization": f"Zoho-oauthtoken {api_token}"}
+    # response = requests.get(url, headers=headers)
+    
+    # Mock data representing what you'd parse from the Zoho CRM JSON response
+    mock_zoho_data = [
+        {"id": "G-101", "title": "Community Health Initiative 2023", "details": "Funded $50,000 for local clinics. Requires quarterly reporting."},
+        {"id": "G-102", "title": "Tech for Schools", "details": "Provided laptops to 5 schools. Focus was on STEM education."},
+    ]
+    
+    # Convert CRM data into LangChain Document objects
+    documents = []
+    for item in mock_zoho_data:
+        doc = Document(
+            page_content=f"Grant Title: {item['title']}\nDetails: {item['details']}",
+            metadata={"source": "Zoho CRM", "grant_id": item['id']}
+        )
+        documents.append(doc)
+    return documents

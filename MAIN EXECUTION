@@ -1,0 +1,36 @@
+# ==========================================
+# MAIN EXECUTION
+# ==========================================
+if __name__ == "__main__":
+    # 1. Ingest Data (Simulated APIs)
+    zoho_docs = fetch_zoho_grant_data(api_token="YOUR_ZOHO_TOKEN")
+    sheet_docs = fetch_google_sheets_intake(sheet_csv_url="YOUR_GOOGLE_SHEET_CSV_LINK")
+    
+    all_knowledge_docs = zoho_docs + sheet_docs
+    
+    # 2. Build RAG Pipeline
+    retriever = initialize_rag_pipeline(all_knowledge_docs)
+    
+    # 3. Create Chatbot
+    grant_bot = create_chatbot(retriever)
+    
+    # 4. Interactive Query Loop
+    print("\n--- Grant Database Chatbot Initialized ---")
+    print("Type 'exit' to quit.\n")
+    
+    while True:
+        user_query = input("Staff Member: ")
+        if user_query.lower() in ['exit', 'quit']:
+            break
+            
+        # Run the RAG query
+        response = grant_bot.invoke({"input": user_query})
+        
+        print("\nAI Assistant:")
+        print(response["answer"])
+        
+        # Optional: Print sources to verify where the data came from
+        print("\n[Sources Used:]")
+        for doc in response["context"]:
+            print(f"- {doc.metadata.get('source')} ({doc.metadata.get('grant_id', doc.metadata.get('date', 'N/A'))})")
+        print("-" * 50 + "\n")

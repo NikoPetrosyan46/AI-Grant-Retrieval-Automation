@@ -1,0 +1,31 @@
+# ==========================================
+# 4. CHATBOT QUERY INTERFACE
+# ==========================================
+def create_chatbot(retriever):
+    """
+    Sets up the local Ollama LLM and the prompt template for natural language queries.
+    """
+    # Use your local open-source model (e.g., Llama 3)
+    llm = Ollama(model="llama3")
+    
+    # Define the system prompt ensuring it relies on the retrieved context
+    system_prompt = (
+        "You are an internal Grant Database Assistant. "
+        "Use the following pieces of retrieved context to answer the user's question. "
+        "If you don't know the answer, say that you don't know based on the provided data. "
+        "Keep the answer concise and helpful for staff members.\n\n"
+        "Context: {context}"
+    )
+    
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        ("human", "{input}"),
+    ])
+    
+    # Chain it all together
+    question_answer_chain = create_stuff_documents_chain(llm, prompt)
+    rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+    
+    return rag_chain
+
+

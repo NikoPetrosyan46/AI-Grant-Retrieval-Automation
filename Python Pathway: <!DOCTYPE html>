@@ -2,46 +2,172 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AI Grant Retriever</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GrantStream | Internal AI Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; padding: 40px; }
-        .container { max-width: 700px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        #chatbox { height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
-        .user-msg { color: #2c3e50; font-weight: bold; margin-top: 10px; }
-        .ai-msg { color: #27ae60; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        .source { font-size: 0.8em; color: #7f8c8d; font-style: italic; }
-        input { width: 80%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
-        button { padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        :root {
+            --primary-bg: #f8fafc;
+            --sidebar-bg: #1e293b;
+            --accent-blue: #3b82f6;
+            --text-main: #334155;
+            --card-white: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: white;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h2 { font-size: 1.2rem; margin-bottom: 30px; color: var(--accent-blue); }
+        .project-meta { font-size: 0.85rem; line-height: 1.6; opacity: 0.8; }
+        .badge { background: #334155; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; }
+
+        /* --- MAIN CONTENT --- */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 40px;
+            overflow: hidden;
+        }
+
+        header { margin-bottom: 30px; }
+        header h1 { margin: 0; font-size: 1.5rem; font-weight: 600; }
+
+        #chat-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding-right: 10px;
+        }
+
+        /* --- MESSAGE BUBBLES --- */
+        .message { max-width: 85%; padding: 15px 20px; border-radius: 12px; line-height: 1.5; position: relative; }
+        .user-msg { align-self: flex-end; background-color: var(--accent-blue); color: white; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2); }
+        .ai-msg { align-self: flex-start; background-color: var(--card-white); border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+
+        .source-tag {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 0.75rem;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        /* --- INPUT AREA --- */
+        .input-area {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+
+        input { flex-grow: 1; border: none; outline: none; font-size: 1rem; color: var(--text-main); }
+        button { background: var(--accent-blue); color: white; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #2563eb; }
+
+        /* --- LOADING SPINNER --- */
+        #loader { display: none; align-self: flex-start; font-style: italic; color: #94a3b8; font-size: 0.9rem; margin-top: 5px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Grant Assistant Dashboard</h2>
-        <div id="chatbox"></div>
-        <input type="text" id="userInput" placeholder="Ask about a grant...">
-        <button onclick="askAI()">Send</button>
-    </div>
+
+    <aside class="sidebar">
+        <h2>GrantStream AI</h2>
+        <div class="project-meta">
+            <p><strong>System Status:</strong> <span class="badge">ACTIVE</span></p>
+            <p><strong>Model:</strong> Llama-3 (Ollama)</p>
+            <p><strong>Database:</strong> ChromaDB</p>
+            <hr style="opacity: 0.1; margin: 20px 0;">
+            <p>Querying internal data from Zoho CRM and Google Intake Sheets.</p>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header>
+            <h1>Grant Retrieval Dashboard</h1>
+        </header>
+
+        <div id="chat-container">
+            <div class="message ai-msg">
+                Hello! I have indexed your grant documents. How can I assist you today?
+            </div>
+        </div>
+
+        <div id="loader">Assistant is thinking...</div>
+
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Search for grant materials or historical data..." onkeypress="handleKeyPress(event)">
+            <button onclick="askAI()">Search</button>
+        </div>
+    </main>
 
     <script>
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') askAI();
+        }
+
         async function askAI() {
             const input = document.getElementById('userInput');
-            const box = document.getElementById('chatbox');
-            const message = input.value;
+            const container = document.getElementById('chat-container');
+            const loader = document.getElementById('loader');
+            const message = input.value.trim();
+
             if (!message) return;
 
-            box.innerHTML += `<div class="user-msg">You: ${message}</div>`;
+            // 1. Add User Message
+            container.innerHTML += `<div class="message user-msg">${message}</div>`;
             input.value = '';
+            loader.style.display = 'block';
+            container.scrollTop = container.scrollHeight;
 
-            const response = await fetch('/ask', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({message: message})
-            });
+            try {
+                // 2. Fetch from Flask
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: message})
+                });
 
-            const data = await response.json();
-            box.innerHTML += `<div class="ai-msg"><b>AI:</b> ${data.answer}<br>
-                              <span class="source">Sources: ${data.sources.join(', ')}</span></div>`;
-            box.scrollTop = box.scrollHeight;
+                const data = await response.json();
+                loader.style.display = 'none';
+
+                // 3. Add AI Message + Sources
+                const sourcesHtml = data.sources.map(s => `<span class="source-tag">Source: ${s}</span>`).join(' ');
+                container.innerHTML += `
+                    <div class="message ai-msg">
+                        ${data.answer}<br>
+                        ${sourcesHtml}
+                    </div>
+                `;
+                container.scrollTop = container.scrollHeight;
+
+            } catch (error) {
+                loader.style.display = 'none';
+                container.innerHTML += `<div class="message ai-msg" style="color: red;">Error: Could not connect to the local LLM.</div>`;
+            }
         }
     </script>
 </body>

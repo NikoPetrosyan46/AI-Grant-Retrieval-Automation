@@ -1,28 +1,43 @@
 # ==========================================
-# 1. ZOHO CRM INTEGRATION (Historical Docs)
+# 1. ZOHO CRM INTEGRATION
 # ==========================================
-def fetch_zoho_grant_data(api_token):
+def fetch_zoho_grant_data():
     """
-    Simulates fetching historical grant documents from Zoho CRM via API.
+    Fetches real records from Zoho CRM. 
+    Note: Requires a valid Zoho Access Token.
     """
-    print("Fetching historical grant documents from Zoho CRM...")
-    # In a real scenario, this would be your Zoho API endpoint
-    # url = "https://www.zohoapis.com/crm/v2/Grants"
-    # headers = {"Authorization": f"Zoho-oauthtoken {api_token}"}
-    # response = requests.get(url, headers=headers)
+    print("Connecting to Zoho CRM API...")
     
-    # Mock data representing what you'd parse from the Zoho CRM JSON response
-    mock_zoho_data = [
-        {"id": "G-101", "title": "Community Health Initiative 2023", "details": "Funded $50,000 for local clinics. Requires quarterly reporting."},
-        {"id": "G-102", "title": "Tech for Schools", "details": "Provided laptops to 5 schools. Focus was on STEM education."},
-    ]
+    # These should be in your .env file
+    api_url = "https://www.zohoapis.com/crm/v2/Grants" 
+    access_token = os.getenv("ZOHO_ACCESS_TOKEN")
     
-    # Convert CRM data into LangChain Document objects
-    documents = []
-    for item in mock_zoho_data:
-        doc = Document(
-            page_content=f"Grant Title: {item['title']}\nDetails: {item['details']}",
-            metadata={"source": "Zoho CRM", "grant_id": item['id']}
-        )
-        documents.append(doc)
-    return documents
+    headers = {
+        "Authorization": f"Zoho-oauthtoken {access_token}"
+    }
+
+    try:
+        response = requests.get(api_url, headers=headers)
+        if response.status_code == 200:
+            data = response.json().get('data', [])
+            documents = []
+            for record in data:
+                # Map Zoho fields to your document content
+                content = (
+                    f"Grant Title: {record.get('Grant_Name', 'N/A')}\n"
+                    f"Status: {record.get('Stage', 'N/A')}\n"
+                    f"Details: {record.get('Description', 'No description provided.')}"
+                )
+                doc = Document(
+                    page_content=content,
+                    metadata={"source": "Zoho CRM", "id": record.get('id')}
+                )
+                documents.append(doc)
+            print(f"Successfully ingested {len(documents)} records from Zoho.")
+            return documents
+        else:
+            print(f"Zoho API Error: {response.status_code} - {response.text}")
+            return []
+    except Exception as e:
+        print(f"Failed to connect to Zoho: {e}")
+        return []

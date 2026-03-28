@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Grant Retriever</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 50px auto; }
+        #chat-box { border: 1px solid #ccc; height: 400px; overflow-y: scroll; padding: 20px; }
+        .user { color: blue; }
+        .ai { color: green; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Grant Research Assistant</h1>
+    <div id="chat-box"></div>
+    <input type="text" id="user-input" placeholder="Ask about a grant..." style="width: 80%;">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const box = document.getElementById('chat-box');
+            
+            // Show user message
+            box.innerHTML += `<p class="user"><b>You:</b> ${input.value}</p>`;
+            
+            // Send to Python Backend
+            const response = await fetch('/ask', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message: input.value})
+            });
+            const data = await response.json();
+            
+            // Show AI response
+            box.innerHTML += `<p class="ai"><b>AI:</b> ${data.answer}</p>`;
+            input.value = '';
+        }
+    </script>
+</body>
+</html>

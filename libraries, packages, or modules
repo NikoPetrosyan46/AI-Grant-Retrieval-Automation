@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import requests
+from dotenv import load_dotenv # Recommended for security
 from langchain_community.llms import Ollama
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.vectorstores import Chroma

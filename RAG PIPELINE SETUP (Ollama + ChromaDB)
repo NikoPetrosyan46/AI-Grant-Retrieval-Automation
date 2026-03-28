@@ -1,22 +1,30 @@
 # ==========================================
-# 3. RAG PIPELINE SETUP (Ollama + ChromaDB)
+# 3. RAG PIPELINE & CHATBOT (Same as before)
 # ==========================================
 def initialize_rag_pipeline(documents):
-    """
-    Embeds documents and stores them in a local ChromaDB vector store.
-    """
-    print("Initializing RAG pipeline and embedding documents securely...")
+    if not documents:
+        print("Warning: No documents found to index.")
+        return None
     
-    # Using Ollama for local, secure embeddings (keeps data on-premise)
+    print("Embedding documents into ChromaDB...")
     embeddings = OllamaEmbeddings(model="nomic-embed-text") 
-    
-    # Create the vector store
     vectorstore = Chroma.from_documents(
         documents=documents, 
         embedding=embeddings,
         persist_directory="./grant_chroma_db"
     )
+    return vectorstore.as_retriever(search_kwargs={"k": 3})
+
+def create_chatbot(retriever):
+    llm = Ollama(model="llama3")
+    system_prompt = (
+        "You are an internal Grant Database Assistant. Use the context to answer questions. "
+        "Context: {context}"
+    )
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        ("human", "{input}"),
+    ])
     
-    # Create a retriever
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
-    return retriever
+    combine_docs_chain = create_stuff_documents_chain(llm, prompt)
+    return create_retrieval_chain(retriever, combine_docs_chain)

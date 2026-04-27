@@ -5,10 +5,10 @@ def fetch_zoho_grant_data():
     """
     Fetches real records from Zoho CRM. 
     Note: Requires a valid Zoho Access Token.
+    Required from Zoho SEARCH&QUERY API's
     """
     print("Connecting to Zoho CRM API...")
     
-    # These should be in your .env file
     api_url = "https://www.zohoapis.com/crm/v2/Grants" 
     access_token = os.getenv("ZOHO_ACCESS_TOKEN")
     
